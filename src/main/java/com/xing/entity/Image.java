@@ -1,13 +1,13 @@
 package com.xing.entity;
 
-import java.util.Date;
+
 
 public class Image {
     private String id;
 
     private String filename;
 
-    private Date gmtUpload;
+    private String gmtUpload;
 
     public String getId() {
         return id;
@@ -25,11 +25,11 @@ public class Image {
         this.filename = filename;
     }
 
-    public Date getGmtUpload() {
+    public String getGmtUpload() {
         return gmtUpload;
     }
 
-    public void setGmtUpload(Date gmtUpload) {
+    public void setGmtUpload(String gmtUpload) {
         this.gmtUpload = gmtUpload;
     }
 }

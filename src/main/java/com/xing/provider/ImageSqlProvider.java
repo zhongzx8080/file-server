@@ -12,7 +12,7 @@ public class ImageSqlProvider {
                 INSERT_INTO("image");
                 VALUES("id", "'" + image.getId() + "'");
                 VALUES("filename", "'" + image.getFilename() + "'");
-                VALUES("gmt_upload", "now()");
+                VALUES("gmt_upload", "'" + image.getGmtUpload() + "'");
             }
         }.toString();
     }
