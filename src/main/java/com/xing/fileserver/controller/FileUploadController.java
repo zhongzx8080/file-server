@@ -138,6 +138,9 @@ public class FileUploadController {
   @ResponseBody
   public ResultBean getFileById(@PathVariable String id) {
     FileUpload fileUpload = fileUploadService.getById(id);
+    if (Objects.isNull(fileUpload)) {
+      return new ResultBean.Builder().code(-1).msg("文件不存在").build();
+    }
     return new ResultBean.Builder().data(fileUpload).build();
   }
 
