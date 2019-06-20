@@ -1,0 +1,36 @@
+version: '3'
+services:
+  mysql:
+    image: "mysql/mysql-server:8.0"
+    container_name: 'file-server-mysql'
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'file_server'
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - 6033:3306
+    volumes:
+      - /data/mysql:/var/lib/mysql
+
+  nginx:
+    image: "nginx:1.17.0"
+    container_name: 'file-server-nginx'
+    restart: always
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - 80:80
+      - 443:443
+
+  app:
+    build: .
+    container_name: 'file-server-java'
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    ports:
+      - 9999:9999
+    depends_on:
+      - mysql
+      - nginx
