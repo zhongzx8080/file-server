@@ -1,0 +1,50 @@
+version: '3'
+services:
+  mysql:
+    image: "mysql/mysql-server:8.0"
+    container_name: 'file-server-mysql'
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'file_server'
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - 3306:3306
+    volumes:
+      - /data/file-server/mysql:/var/lib/mysql
+
+  nginx:
+    image: "nginx:1.17.0"
+    container_name: 'file-server-nginx'
+    restart: always
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - /tmp/file-server/cache:/tmp/file-server/cache
+    ports:
+      - 80:80
+      - 443:443
+
+  redis:
+    image: "redis:5.0"
+    container_name: "file-server-redis"
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - /data:/data
+    command: ['redis-server', '/usr/local/etc/redis/redis.conf']
+
+  app:
+    image: 'file-server-java'
+    container_name: 'file-server-app'
+    restart: always
+    volumes:
+      - /tmp/file-server/upload:/app/upload
+      - /tmp/file-server/log:/app/log
+    ports:
+      - 9999:9999
+    depends_on:
+      - mysql
+      - nginx
+      - redis
