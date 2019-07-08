@@ -10,18 +10,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Objects;
 
 /**
@@ -41,6 +44,12 @@ public class FileUploadController {
   @Value("${file.upload.path}")
   private String fileUploadPath;
 
+  @Autowired
+  private RedisTemplate<String, String> redisTemplate;
+
+  @Value("${spring.redis.host}")
+  private String redisHost;
+
   /*
    *
    * 获取文件
@@ -52,6 +61,9 @@ public class FileUploadController {
    * */
   @GetMapping("get")
   public void getFile(@RequestParam("path") String path, @RequestParam(value = "w", required = false) String w, @RequestParam(value = "h", required = false) String h, @RequestParam(value = "q", defaultValue = "1.0") String q, HttpServletRequest request, HttpServletResponse response) {
+    logger.info("redis host {}", redisHost);
+    // url 作为键
+    String requestUrl = String.format("%s?%s", request.getRequestURI(), request.getQueryString());
     try {
       path = Paths.get(fileUploadPath, URLDecoder.decode(path, "UTF-8")).toAbsolutePath().toString();
     } catch (UnsupportedEncodingException e) {
@@ -68,6 +80,20 @@ public class FileUploadController {
       boolean isPicture = FileUtil.isPicture(ext);
       byte[] data = new byte[0];
       if (isPicture) {
+        response.setContentType(String.format("image/%s", "JPEG"));
+
+        String base64Data = redisTemplate.opsForValue().get(requestUrl);
+        if (Objects.nonNull(base64Data) && !Objects.equals("", base64Data)) {
+          logger.info("缓存加载, {}", requestUrl);
+          data = Base64.getDecoder().decode(base64Data);
+          response.getOutputStream().write(data);
+          response.getOutputStream().flush();
+          response.getOutputStream().close();
+          return;
+        }
+//
+//        logger.info("没有缓存, {}", requestUrl);
+
         // 压缩图片
         Integer srcWidth = FileUtil.getWidthHeight(path)[0];
         Integer srcHeight = FileUtil.getWidthHeight(path)[1];
@@ -97,16 +123,21 @@ public class FileUploadController {
         } catch (Exception e) {
           quality = 1.0;
         }
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        Thumbnails.of(path).size(width, height).keepAspectRatio(false).outputFormat("JPG").outputQuality(quality).toOutputStream(bos);
+        data = bos.toByteArray();
 
-        String imageFormat = "jpeg";
-        response.setContentType(String.format("image/%s", imageFormat));
-        Thumbnails.of(path).size(width, height).keepAspectRatio(false).outputFormat(imageFormat).outputQuality(quality).toOutputStream(response.getOutputStream());
+        // 转成base64 保存到 redis
+        base64Data = Base64.getEncoder().encodeToString(data);
+        redisTemplate.opsForValue().set(requestUrl, base64Data);
       } else {
         data = Files.readAllBytes(filePath);
         response.setHeader("Content-Disposition", String.format("attachment;filename=%s", filename));
         response.setContentLength(data.length);
       }
       response.getOutputStream().write(data);
+      response.getOutputStream().close();
+
     } catch (IOException e) {
       logger.error("读取文件异常 {}", e);
     }
