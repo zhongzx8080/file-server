@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,6 +47,7 @@ public class FileUploadService {
   private FileUploadMapper fileUploadMapper;
 
   public FileUpload store(MultipartFile file, HttpServletRequest request) {
+    logger.info("文件保存路径 {}", fileUploadPath);
     FileUpload fileUpload = new FileUpload();
     String id = UUID.randomUUID().toString();
     fileUpload.setId(id);
@@ -74,6 +77,7 @@ public class FileUploadService {
     if (Files.notExists(storeDir)) {
       try {
         Files.createDirectories(storeDir);
+        logger.info("文件夹创建成功: {}", storeDir);
       } catch (IOException e) {
         logger.error("文件夹创建失败:{}", e);
         return null;
@@ -105,11 +109,14 @@ public class FileUploadService {
     return fileUpload;
   }
 
+  @Cacheable(cacheNames = "fileUpload", key = "#id")
   public FileUpload getById(String id) {
+    logger.info("调用 getById {}", id);
     FileUpload fileUpload = fileUploadMapper.selectByPrimaryKey(id);
     return fileUpload;
   }
 
+  @CachePut(cacheNames = "fileUpload", key = "#id")
   public FileUpload deleteById(String id) {
     FileUpload fileUpload = new FileUpload();
     fileUpload.setId(id);
