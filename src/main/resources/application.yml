@@ -1,0 +1,46 @@
+# server
+server:
+  port: 9090
+
+# spring
+spring:
+  profiles:
+    active: dev
+  application:
+    name: file-server
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${db.host:localhost}:${db.port:3306}/${db.name:file_server}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    username: ${db.user:root}
+    password: ${db.password:root}
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+
+# MyBatis Plus
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+
+# 日志
+logging:
+  level:
+    com.xing: debug
+
+# minio
+minio:
+  endpoint: http://localhost:9000
+  user: minio
+  password: minio123
+  bucket: ${spring.application.name:default}
+  # 单位秒,预签url有效期(默认一天)
+  expire: 86400
+
+# 业务
+download:
+  # java服务访问地址
+  host: http://localhost:9090
+  # 下载文件的api接口
+  api: files/download
+  # 是否使用预签url
+  presigned: true

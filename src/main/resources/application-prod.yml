@@ -1,0 +1,32 @@
+# 数据库配置
+db:
+  host: localhost
+  port: 3306
+  name: file_server
+  user: root
+  password: root
+
+# minio
+minio:
+  endpoint: http://localhost:9000
+  user: minio
+  password: minio123
+  bucket: file-server-prod
+
+# 业务
+download:
+  # java服务访问地址
+  host: http://localhost:9090
+  # 是否使用预签url
+  presigned: true
+
+# 日志
+logging:
+  level:
+    com.xing: info
+
+# swagger
+springfox:
+  documentation:
+    swagger-ui:
+      enabled: false

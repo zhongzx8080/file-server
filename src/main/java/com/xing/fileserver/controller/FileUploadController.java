@@ -1,191 +1,128 @@
 package com.xing.fileserver.controller;
 
-import com.xing.fileserver.model.FileUpload;
+import cn.hutool.core.bean.BeanUtil;
+import com.xing.fileserver.common.model.PageResultBean;
+import com.xing.fileserver.dto.*;
 import com.xing.fileserver.service.FileUploadService;
-import com.xing.fileserver.util.FileUtil;
-import com.xing.fileserver.util.ResultBean;
-import com.xing.fileserver.util.ResultConstant;
-import net.coobird.thumbnailator.Thumbnails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.xing.fileserver.vo.FillFilesTestVO;
+import com.xing.fileserver.vo.UploadPresignedVO;
+import com.xing.fileserver.vo.UploadVO;
+import com.xing.fileserver.vo.UploadedFileVO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Base64;
+import java.util.List;
 import java.util.Objects;
 
-/**
- * @author xing
- * @date 2019/5/29 23:15
- */
-
-@Controller
-@RequestMapping("file")
+@Api(tags = "Minio", description = "Minio文件服务接口")
+@RestController
+@RequestMapping("files")
 public class FileUploadController {
 
-  private Logger logger = LoggerFactory.getLogger(this.getClass());
+    @Autowired
+    private FileUploadService fileUploadService;
 
-  @Autowired
-  private FileUploadService fileUploadService;
-
-  @Value("${file.upload.path}")
-  private String fileUploadPath;
-
-  @Autowired
-  private RedisTemplate<String, String> redisTemplate;
-
-  @Value("${spring.redis.host}")
-  private String redisHost;
-
-  /*
-   *
-   * 获取文件
-   * @param 文件路径
-   * @param w 图片宽度(默认为原图片宽度)
-   * @param h 图片高度(默认为原图片高度)
-   * @param q 图片质量(0.0 - 1.0)
-   *
-   * */
-  @GetMapping("get")
-  public void getFile(@RequestParam("path") String path, @RequestParam(value = "w", required = false) String w, @RequestParam(value = "h", required = false) String h, @RequestParam(value = "q", defaultValue = "1.0") String q, HttpServletRequest request, HttpServletResponse response) {
-    logger.info("redis host {}", redisHost);
-    // url 作为键
-    String requestUrl = String.format("%s?%s", request.getRequestURI(), request.getQueryString());
-    try {
-      path = Paths.get(fileUploadPath, URLDecoder.decode(path, "UTF-8")).toAbsolutePath().toString();
-    } catch (UnsupportedEncodingException e) {
-      logger.error("url解码异常 {}", e);
+    @ApiOperation("上传文件")
+    @PostMapping("upload")
+    public UploadVO upload(@RequestParam(value = "file") MultipartFile file, UploadDTO uploadDTO) {
+        UploadResultDTO uploadResultDTO = fileUploadService.upload(file, uploadDTO);
+        UploadVO uploadVO = BeanUtil.toBean(uploadResultDTO, UploadVO.class);
+        return uploadVO;
     }
-    String ext = FileUtil.getBySymbol(path, ".");
-    String filename = FileUtil.getBySymbol(path, "\\");
-    Path filePath = Paths.get(path);
-    if (Files.notExists(filePath)) {
-      logger.error("获取失败,文件不存在");
-      return;
-    }
-    try {
-      boolean isPicture = FileUtil.isPicture(ext);
-      byte[] data = new byte[0];
-      if (isPicture) {
-        response.setContentType(String.format("image/%s", "JPEG"));
 
-        String base64Data = redisTemplate.opsForValue().get(requestUrl);
-        if (Objects.nonNull(base64Data) && !Objects.equals("", base64Data)) {
-          logger.info("缓存加载, {}", requestUrl);
-          data = Base64.getDecoder().decode(base64Data);
-          response.getOutputStream().write(data);
-          response.getOutputStream().flush();
-          response.getOutputStream().close();
-          return;
+    @ApiOperation("预签-上传文件")
+    @PostMapping("presigned")
+    public UploadPresignedVO uploadPresigned(@Validated @RequestBody UploadPresignedDTO dto) {
+        UploadPresignedResultDTO uploadPresignedResultDTO = fileUploadService.uploadPresigned(dto);
+        UploadPresignedVO uploadPresignedVO = BeanUtil.toBean(uploadPresignedResultDTO, UploadPresignedVO.class);
+        return uploadPresignedVO;
+    }
+
+    @ApiOperation("预签-上传文件结束")
+    @PostMapping("finished")
+    public int uploadFinished(@Validated @RequestBody UploadFinishedDTO dto) {
+        int count = fileUploadService.uploadFinished(dto);
+        return count;
+    }
+
+    @ApiOperation("文件列表")
+    @GetMapping("")
+    public PageResultBean<UploadedFileVO> getFiles(UploadFilePageDTO dto) {
+        PageResultBean<UploadedFileDTO> pageResultBean = fileUploadService.listFiles(dto);
+        List<UploadedFileDTO> files = pageResultBean.getData();
+        List<UploadedFileVO> data = BeanUtil.copyToList(files, UploadedFileVO.class);
+        return new PageResultBean(pageResultBean.getTotal(), data);
+    }
+
+    @ApiOperation("下载文件")
+    @GetMapping("download/{id}")
+    public void download(@PathVariable String id, HttpServletResponse response) {
+        fileUploadService.download(id, response);
+    }
+
+    @ApiOperation("业务id与文件绑定")
+    @PostMapping("bind")
+    public int bind(@Validated @RequestBody UploadBindDTO bindDTO) {
+        return fileUploadService.bind(bindDTO);
+    }
+
+
+    @ApiOperation("文件信息")
+    @GetMapping("{id}")
+    public UploadedFileVO getById(@PathVariable String id) {
+        UploadedFileDTO uploadedFileDTO = fileUploadService.getById(id);
+        UploadedFileVO uploadedFileVO = null;
+        if (Objects.nonNull(uploadedFileDTO)) {
+            uploadedFileVO = BeanUtil.toBean(uploadedFileDTO, UploadedFileVO.class);
         }
-//
-//        logger.info("没有缓存, {}", requestUrl);
-
-        // 压缩图片
-        Integer srcWidth = FileUtil.getWidthHeight(path)[0];
-        Integer srcHeight = FileUtil.getWidthHeight(path)[1];
-        Integer width, height;
-        Double quality = 1.0;
-        try {
-          width = Integer.parseInt(w);
-          if (Objects.isNull(width) || width <= 0) {
-            width = srcWidth;
-          }
-        } catch (Exception e) {
-          width = srcWidth;
-        }
-        try {
-          height = Integer.parseInt(h);
-          if (Objects.isNull(height) || height <= 0) {
-            height = srcHeight;
-          }
-        } catch (Exception e) {
-          height = srcHeight;
-        }
-        try {
-          quality = Double.parseDouble(q);
-          if (quality < 0 || quality > 1 || Objects.isNull(quality)) {
-            quality = 1.0;
-          }
-        } catch (Exception e) {
-          quality = 1.0;
-        }
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        Thumbnails.of(path).size(width, height).keepAspectRatio(false).outputFormat("JPG").outputQuality(quality).toOutputStream(bos);
-        data = bos.toByteArray();
-
-        // 转成base64 保存到 redis
-        base64Data = Base64.getEncoder().encodeToString(data);
-        redisTemplate.opsForValue().set(requestUrl, base64Data);
-      } else {
-        data = Files.readAllBytes(filePath);
-        response.setHeader("Content-Disposition", String.format("attachment;filename=%s", filename));
-        response.setContentLength(data.length);
-      }
-      response.getOutputStream().write(data);
-      response.getOutputStream().close();
-
-    } catch (IOException e) {
-      logger.error("读取文件异常 {}", e);
-    }
-  }
-
-
-  /*
-   * 上传文件
-   *
-   * */
-  @PostMapping("upload")
-  @ResponseBody
-  public ResultBean uploadFile(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
-
-    FileUpload fileUpload = fileUploadService.store(file, request);
-    if (Objects.isNull(fileUpload)) {
-      return new ResultBean.Builder().code(ResultConstant.CODE_SERVER_EXCEPTION).msg(ResultConstant.MSG_SERVER_EXCEPTION).build();
+        return uploadedFileVO;
     }
 
-    return new ResultBean.Builder().data(fileUpload).build();
-  }
-
-  /*
-   *
-   * 通过id获取文件信息
-   *
-   * */
-  @GetMapping("{id}")
-  @ResponseBody
-  public ResultBean getFileById(@PathVariable String id) {
-    FileUpload fileUpload = fileUploadService.getById(id);
-    if (Objects.isNull(fileUpload)) {
-      return new ResultBean.Builder().code(-1).msg("文件不存在").build();
+    @ApiOperation("通过文件id删除文件")
+    @DeleteMapping("{id}")
+    public int deleteById(@PathVariable String id) {
+        int count = fileUploadService.delete(id);
+        return count;
     }
-    return new ResultBean.Builder().data(fileUpload).build();
-  }
 
-  /*
-   *
-   * 通过id 删除文件
-   *
-   * */
-  @DeleteMapping("{id}")
-  @ResponseBody
-  public ResultBean deleteFileById(@PathVariable String id) {
-    FileUpload fileUpload = fileUploadService.deleteById(id);
-    return new ResultBean.Builder().data(fileUpload).build();
-  }
+    @ApiOperation("通过业务id删除文件")
+    @DeleteMapping("biz/{bizId}")
+    public int deleteByBizId(@PathVariable String bizId) {
+        int count = fileUploadService.deleteByBizId(bizId);
+        return count;
+    }
+
+
+    @ApiOperation("通过业务id获取文件")
+    @GetMapping("biz/{bizId}")
+    public List<UploadedFileVO> getBizFiles(@PathVariable String bizId) {
+        List<UploadedFileDTO> uploadedFileDTOS = fileUploadService.getByBizId(bizId);
+        List<UploadedFileVO> uploadedFileVOS = BeanUtil.copyToList(uploadedFileDTOS, UploadedFileVO.class);
+        return uploadedFileVOS;
+    }
+
+
+    @ApiOperation("获取预签url")
+    @GetMapping("presigned/{id}")
+    public UploadPresignedVO getPresignedUrl(@PathVariable String id) {
+        UploadPresignedResultDTO uploadPresignedResultDTO = fileUploadService.getPresigned(id);
+        UploadPresignedVO uploadPresignedVO = BeanUtil.toBean(uploadPresignedResultDTO, UploadPresignedVO.class);
+        return uploadPresignedVO;
+    }
+
+
+    @ApiOperation("测试 @FillFiles")
+    @GetMapping("test-fill-files/{bizId}")
+    public FillFilesTestVO testFillFills(@PathVariable String bizId) {
+        FillFilesTestVO vo = new FillFilesTestVO();
+        vo.setBizId(bizId);
+        return vo;
+    }
 
 
 }
