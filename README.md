@@ -53,3 +53,17 @@ server {
 ## 接口
 
 > http://localhost:9090/swagger-ui/
+
+## 上传接口
+
+### 1. 使用预签上传
+
+> 避免中转，提升上传速度
+
+- 前端先`POST`请求`/files/presigned`，生成一个给`HTTP PUT`请求用的`presigned URL`。前端可以用这个`URL`进行上传
+- 前端直接通过预签`url`上传文件
+- 最后`POST` 请求`/files/finished`上传完毕
+
+### 2. 使用服务上传
+
+- 文件上传到服务，服务再上传到`Minio`服务
