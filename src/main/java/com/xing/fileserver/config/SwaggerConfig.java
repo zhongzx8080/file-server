@@ -30,7 +30,7 @@ public class SwaggerConfig {
         return new ApiInfoBuilder()
                 .title("SpringBoot Minio文件服务项目接口文档")
                 .description("SpringBoot & Minio")
-                .contact(new Contact("zhongzx8080", "https://github.com/zhongzx8080/file-server/tree/feature-minio", "zhongzx8080"))
+                .contact(new Contact("zhongzx8080", "https://github.com/zhongzx8080/file-server/tree/minio", "zhongzx8080"))
                 .version("1.0")
                 .build();
     }
