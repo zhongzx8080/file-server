@@ -10,13 +10,13 @@ public class PageResultBean<T> implements Serializable {
 
     private long total;
 
-    private List<T> data;
+    private List<T> items;
 
     public PageResultBean() {
     }
 
-    public PageResultBean(long total, List<T> data) {
+    public PageResultBean(long total, List<T> items) {
         this.total = total;
-        this.data = data;
+        this.items = items;
     }
 }
