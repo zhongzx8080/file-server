@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import com.xing.fileserver.common.model.PageResultBean;
 import com.xing.fileserver.dto.*;
 import com.xing.fileserver.service.FileUploadService;
-import com.xing.fileserver.vo.FillFilesTestVO;
 import com.xing.fileserver.vo.UploadPresignedVO;
 import com.xing.fileserver.vo.UploadVO;
 import com.xing.fileserver.vo.UploadedFileVO;
@@ -116,13 +115,13 @@ public class FileUploadController {
     }
 
 
-    @ApiOperation("测试 @FillFiles")
-    @GetMapping("test-fill-files/{bizId}")
-    public FillFilesTestVO testFillFills(@PathVariable String bizId) {
-        FillFilesTestVO vo = new FillFilesTestVO();
-        vo.setBizId(bizId);
-        return vo;
-    }
+//    @ApiOperation("测试 @FillFiles")
+//    @GetMapping("test-fill-files/{bizId}")
+//    public FillFilesTestVO testFillFills(@PathVariable String bizId) {
+//        FillFilesTestVO vo = new FillFilesTestVO();
+//        vo.setBizId(bizId);
+//        return vo;
+//    }
 
 
 }

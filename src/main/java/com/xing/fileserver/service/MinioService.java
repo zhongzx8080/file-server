@@ -65,10 +65,10 @@ public class MinioService {
         }
     }
 
-    public byte[] get(String filename) {
+    public byte[] get(String path) {
         byte[] data = new byte[0];
         try {
-            InputStream is = minioClient.getObject(getBucket(), filename);
+            InputStream is = minioClient.getObject(getBucket(), path);
             data = IoUtil.readBytes(is);
         } catch (Exception e) {
             log.error(e.getMessage());
