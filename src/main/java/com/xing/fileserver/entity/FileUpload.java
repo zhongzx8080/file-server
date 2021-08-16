@@ -1,4 +1,4 @@
-package com.xing.fileserver.model;
+package com.xing.fileserver.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.xing.fileserver.common.constant.FileStatusEnum;

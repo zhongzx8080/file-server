@@ -15,7 +15,7 @@ import com.xing.fileserver.common.model.PageResultBean;
 import com.xing.fileserver.config.DownloadConfig;
 import com.xing.fileserver.dto.*;
 import com.xing.fileserver.mapper.FileUploadMapper;
-import com.xing.fileserver.model.FileUpload;
+import com.xing.fileserver.entity.FileUpload;
 import io.minio.ObjectStat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

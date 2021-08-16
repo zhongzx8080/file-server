@@ -54,7 +54,7 @@ public class FileUploadController {
     @GetMapping("")
     public PageResultBean<UploadedFileVO> getFiles(UploadFilePageDTO dto) {
         PageResultBean<UploadedFileDTO> pageResultBean = fileUploadService.listFiles(dto);
-        List<UploadedFileDTO> files = pageResultBean.getData();
+        List<UploadedFileDTO> files = pageResultBean.getItems();
         List<UploadedFileVO> data = BeanUtil.copyToList(files, UploadedFileVO.class);
         return new PageResultBean(pageResultBean.getTotal(), data);
     }

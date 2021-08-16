@@ -1,7 +1,7 @@
 package com.xing.fileserver.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.xing.fileserver.model.FileUpload;
+import com.xing.fileserver.entity.FileUpload;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
