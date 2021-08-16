@@ -9,10 +9,10 @@ import io.minio.ObjectStat;
 import io.minio.PutObjectOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.PostConstruct;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
@@ -25,20 +25,16 @@ public class MinioService {
     @Autowired
     private MinioConfig config;
 
-    @Autowired
     private MinioClient minioClient;
 
-    @Bean
-    public MinioClient getClient() {
-        MinioClient client = null;
+    @PostConstruct
+    public void initClient() {
         try {
-            client = new MinioClient(config.getEndpoint(), config.getUser(), config.getPassword());
+            this.minioClient = new MinioClient(config.getEndpoint(), config.getUser(), config.getPassword());
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new BusinessException("Minio初始化异常");
         }
-
-        return client;
     }
 
     public String getBucket() {
