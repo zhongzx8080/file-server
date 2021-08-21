@@ -14,8 +14,8 @@ import com.xing.fileserver.common.exception.BusinessException;
 import com.xing.fileserver.common.model.PageResultBean;
 import com.xing.fileserver.config.DownloadConfig;
 import com.xing.fileserver.dto.*;
-import com.xing.fileserver.mapper.FileUploadMapper;
 import com.xing.fileserver.entity.FileUpload;
+import com.xing.fileserver.mapper.FileUploadMapper;
 import io.minio.ObjectStat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -242,7 +241,7 @@ public class FileUploadService extends ServiceImpl<FileUploadMapper, FileUpload>
             return 0;
         }
 
-        List<String> paths = fileUploads.stream().map(item -> item.getPath()).collect(Collectors.toList());
+        String[] paths = fileUploads.stream().map(item -> item.getPath()).toArray(String[]::new);
         minioService.delete(paths);
 
         LambdaUpdateWrapper<FileUpload> updateWrapper = Wrappers.lambdaUpdate(FileUpload.class);

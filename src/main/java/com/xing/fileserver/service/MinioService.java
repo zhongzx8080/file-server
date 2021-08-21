@@ -1,7 +1,6 @@
 package com.xing.fileserver.service;
 
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.StrUtil;
 import com.xing.fileserver.common.exception.BusinessException;
 import com.xing.fileserver.config.MinioConfig;
 import io.minio.MinioClient;
@@ -14,8 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -77,27 +74,19 @@ public class MinioService {
         return data;
     }
 
-    public void delete(String path) {
+    public void delete(String... paths) {
 
-        if (StrUtil.isBlank(path)) {
+        if (paths.length == 0) {
             return;
         }
         String bucket = getBucket();
-        try {
-            minioClient.removeObject(bucket, path);
-        } catch (Exception e) {
-            log.error("Minio删除{} {}异常", bucket, path, e.getMessage());
-        }
-    }
-
-    public void delete(List<String> paths) {
-        if (Objects.isNull(paths) || paths.size() == 0) {
-            return;
-        }
         for (String path : paths) {
-            delete(path);
+            try {
+                minioClient.removeObject(bucket, path);
+            } catch (Exception e) {
+                log.error("Minio删除{} {}异常", bucket, path, e.getMessage());
+            }
         }
-
     }
 
     public String presignedPut(String path) {
