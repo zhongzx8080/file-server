@@ -36,11 +36,11 @@ minio:
   # 单位秒,预签url有效期(默认一天)
   expire: 86400
 
-# 业务
+# 下载相关
 download:
+  # 是否使用预签url
+  presigned: true
   # java服务访问地址
   host: http://localhost:9090
   # 下载文件的api接口
   api: files/download
-  # 是否使用预签url
-  presigned: true

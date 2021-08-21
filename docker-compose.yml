@@ -1,3 +1,5 @@
+# nginx 与 app 开发环境下可选
+# Windows 下 需保证挂载目录可访问
 version: 3
 services:
   mysql:

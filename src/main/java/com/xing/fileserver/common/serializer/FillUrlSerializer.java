@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/*
+ *
+ * files/download/123 -> http://localhost:9090/files/download/123
+ *
+ * */
 @Component
 public class FillUrlSerializer extends JsonSerializer<String> {
 
