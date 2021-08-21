@@ -13,7 +13,7 @@
 
 - 执行`file_server.sql`初始数据库及表
 - 执行`docker-compose.yml`启动`Minio`服务
-- 启动程序,访问http://localhost:9090/swagger-ui/查看已实现接口
+- 启动程序,访问http://localhost:9090/swagger-ui/  查看已实现接口
 
 - 配置
 
