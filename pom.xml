@@ -20,7 +20,7 @@
         <docker.image.prefix>springio</docker.image.prefix>
         <mybatis.plus.version>3.4.3</mybatis.plus.version>
         <swagger.version>3.0.0</swagger.version>
-        <mysql.connector.version>8.0.16</mysql.connector.version>
+        <mysql.connector.version>8.0.28</mysql.connector.version>
         <alibaba.druid.version>1.1.17</alibaba.druid.version>
         <minio.version>7.0.2</minio.version>
         <hutool.version>5.7.8</hutool.version>
